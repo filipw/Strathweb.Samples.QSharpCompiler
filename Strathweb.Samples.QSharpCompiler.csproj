@@ -6,7 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Hello.qs" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.3.1" />
     <PackageReference Include="Microsoft.Quantum.Compiler" Version="0.12.20070124" />
+    <PackageReference Include="Microsoft.Quantum.Simulators" Version="0.12.20070124" />
+    <PackageReference Include="Microsoft.Quantum.CsharpGeneration" Version="0.12.20070124" />
+    <PackageReference Include="Microsoft.Quantum.EntryPointDriver" Version="0.12.20070124" />
   </ItemGroup>
 
 </Project>
