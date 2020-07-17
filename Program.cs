@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -26,9 +25,7 @@ namespace Strathweb.Samples.QSharpCompiler
                     "/Users/filip/.nuget/packages/microsoft.quantum.qsharp.core/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.QSharp.Core.dll",
                     "/Users/filip/.nuget/packages/microsoft.quantum.runtime.core/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Runtime.Core.dll",
                     "/Users/filip/.nuget/packages/microsoft.quantum.simulators/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Simulation.Common.dll",
-                    "/Users/filip/.nuget/packages/microsoft.quantum.simulators/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime.dll",
-                    // "/Users/filip/.nuget/packages/microsoft.quantum.simulators/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Simulation.Simulators.dll",
-                    // "/Users/filip/.nuget/packages/microsoft.quantum.standard/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Standard.dll"
+                    "/Users/filip/.nuget/packages/microsoft.quantum.simulators/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime.dll"
             };
 
             var qsharpCode = File.ReadAllText("Hello.qs");
@@ -73,10 +70,12 @@ namespace Strathweb.Samples.QSharpCompiler
             if (emitResult.Success)
             {
                 peStream.Position = 0;
-                var qsharpAssembly = Assembly.Load(peStream.ToArray());
+                var qsharpLoadContext = new QSharpLoadContext();
+                var qsharpAssembly = qsharpLoadContext.LoadFromStream(peStream);
                 var entryPoint = qsharpAssembly.GetTypes().First(x => x.Name == "__QsEntryPoint__").GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static);
                 var entryPointTask = entryPoint.Invoke(null, new object[] { null }) as Task<int>;
                 await entryPointTask;
+                qsharpLoadContext.Unload();
             } 
             else 
             {
@@ -85,13 +84,6 @@ namespace Strathweb.Samples.QSharpCompiler
                     Console.WriteLine($"{diag.Id} {diag.GetMessage()}");
                 }
             }
-        }
-    }
-
-    public class QSharpLoadContext : AssemblyLoadContext
-    {
-        public QSharpLoadContext() : base(isCollectible: true)
-        {
         }
     }
 }
