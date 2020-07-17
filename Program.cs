@@ -28,10 +28,17 @@ namespace Strathweb.Samples.QSharpCompiler
                     "/Users/filip/.nuget/packages/microsoft.quantum.simulators/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime.dll"
             };
 
-            var qsharpCode = File.ReadAllText("Hello.qs");
-            Console.WriteLine("Q# code:" + Environment.NewLine);
-            Console.WriteLine(qsharpCode + Environment.NewLine);
+            var qsharpCode = @"
+namespace HelloQuantum {
 
+    open Microsoft.Quantum.Canon;
+    open Microsoft.Quantum.Intrinsic;
+
+    @EntryPoint()
+    operation HelloQ() : Unit {
+        Message(""Hello quantum world!"");
+    }
+}";
             CompilationLoader.CompilationTaskEvent += (sender, args) => 
             {
                 Console.WriteLine($"{args.ParentTaskName} {args.TaskName}");
@@ -49,11 +56,8 @@ namespace Strathweb.Samples.QSharpCompiler
                 }
             };
 
-            var compilationLoader = new CompilationLoader(loadFromDisk =>
-                {
-                    return new Dictionary<Uri, string> { { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode } }.ToImmutableDictionary();
-                },
-                references, options: config, logger: new ConsoleLogger()); 
+            var compilationLoader = new CompilationLoader(loadFromDisk => 
+                new Dictionary<Uri, string> { { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode } }.ToImmutableDictionary(), references, options: config, logger: new ConsoleLogger()); 
             var compilation = compilationLoader.CompilationOutput;
 
             Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, compilationLoader.LoadDiagnostics.Select(s => $"{s.Code} {s.Message}")));
