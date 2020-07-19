@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.EntryPointDriver;
 using Microsoft.Quantum.Simulation.Core;
+using Microsoft.Quantum.Intrinsic;
 
 namespace Strathweb.Samples.QSharpCompiler
 {
@@ -20,12 +21,11 @@ namespace Strathweb.Samples.QSharpCompiler
            var qvoid = typeof(QVoid); // Microsoft.Quantum.Simulation.Core
            var option = typeof(System.CommandLine.Option); // System.CommandLine
            var iEntryPoint = typeof(IEntryPoint<,>); // Microsoft.Quantum.EntryPointDriver
+           var message = typeof(Message); //Microsoft.Quantum.QSharp.Core
 
-            var references = new string[] {
-                    "/Users/filip/.nuget/packages/microsoft.quantum.qsharp.core/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.QSharp.Core.dll",
-                    "/Users/filip/.nuget/packages/microsoft.quantum.runtime.core/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Runtime.Core.dll",
-                    "/Users/filip/.nuget/packages/microsoft.quantum.simulators/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Simulation.Common.dll",
-                    "/Users/filip/.nuget/packages/microsoft.quantum.simulators/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime.dll"
+            var references = new string[] 
+            {
+                    "/Users/filip/.nuget/packages/microsoft.quantum.qsharp.core/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.QSharp.Core.dll"
             };
 
             var qsharpCode = @"
