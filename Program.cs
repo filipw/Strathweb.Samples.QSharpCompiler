@@ -49,7 +49,7 @@ namespace Strathweb.Samples.QSharpCompiler
             var sources = GetSourceFiles.Apply(compilation.Namespaces);
 
             var generatedFiles = new Dictionary<string, string>();
-            foreach (var source in sources)
+            foreach (var source in sources.Where(s => !s.Value.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)))
             {
                 var content = SimulationCode.generate(source, context);
                 generatedFiles.Add(source.Value, content);
