@@ -25,7 +25,7 @@ namespace Strathweb.Samples.QSharpCompiler
 
             var references = new string[] 
             {
-                    "/Users/filip/.nuget/packages/microsoft.quantum.qsharp.core/0.12.20070124/lib/netstandard2.1/Microsoft.Quantum.QSharp.Core.dll"
+                message.Assembly.Location
             };
 
             var qsharpCode = @"
