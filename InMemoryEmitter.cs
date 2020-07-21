@@ -12,8 +12,10 @@ namespace Strathweb.Samples.QSharpCompiler
 {
     class InMemoryEmitter : IRewriteStep
     {
-        private Dictionary<string, string> _assemblyConstants = new Dictionary<string, string>();
-        private List<IRewriteStep.Diagnostic> _diagnostics = new List<IRewriteStep.Diagnostic>();
+        public static Dictionary<string, string> GeneratedFiles = new Dictionary<string, string>();
+
+        private readonly Dictionary<string, string> _assemblyConstants = new Dictionary<string, string>();
+        private readonly List<IRewriteStep.Diagnostic> _diagnostics = new List<IRewriteStep.Diagnostic>();
 
         public string Name => "InMemoryCsharpGeneration";
 
@@ -36,17 +38,13 @@ namespace Strathweb.Samples.QSharpCompiler
 
         public bool Transformation(QsCompilation compilation, out QsCompilation transformed)
         {
-            _assemblyConstants.TryGetValue("OutputPath", out var dir);
-            dir = Path.Combine(dir, "src");
             var context = CodegenContext.Create(compilation, _assemblyConstants);
             var sources = GetSourceFiles.Apply(compilation.Namespaces);
 
-            var generatedFiles = new Dictionary<string, string>();
             foreach (var source in sources.Where(s => !s.Value.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)))
             {
                 var content = SimulationCode.generate(source, context);
-                generatedFiles.Add(source.Value, content);
-                CompilationLoader.GeneratedFile(source, dir, ".g.cs", content);
+                GeneratedFiles.Add(source.Value, content);
             }
 
             if (!compilation.EntryPoints.IsEmpty)
@@ -54,8 +52,7 @@ namespace Strathweb.Samples.QSharpCompiler
                 var callable = context.allCallables.First(c => c.Key == compilation.EntryPoints.First()).Value;
                 var content = EntryPoint.generate(context, callable);
                 NonNullable<string> entryPointName =  NonNullable<string>.New(callable.SourceFile.Value + ".EntryPoint");
-                generatedFiles.Add(entryPointName.Value, content);
-                CompilationLoader.GeneratedFile(entryPointName, dir, ".EntryPoint.g.cs", content);
+                GeneratedFiles.Add(entryPointName.Value, content);
             }
 
             transformed = compilation;

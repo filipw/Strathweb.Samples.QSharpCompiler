@@ -46,8 +46,6 @@ namespace HelloQuantum {
 
             var config = new CompilationLoader.Configuration 
             { 
-                ExposeReferencesViaTestNames = true,
-                BuildOutputFolder = "out",
                 IsExecutable = true,
                 RewriteSteps = new List<(string, string)>
                 {
@@ -61,8 +59,7 @@ namespace HelloQuantum {
 
             Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, compilationLoader.LoadDiagnostics.Select(s => $"{s.Code} {s.Message}")));
 
-            var syntaxTrees = Directory.EnumerateFiles(Path.Combine(Directory.GetCurrentDirectory(), "out"), "*.cs", SearchOption.AllDirectories)
-                .Select(x => File.ReadAllText(x)).Select(x => CSharpSyntaxTree.ParseText(x));
+            var syntaxTrees = InMemoryEmitter.GeneratedFiles.Select(x => CSharpSyntaxTree.ParseText(x.Value));
 
             var metadataReferences = AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic).Select(x => MetadataReference.CreateFromFile(x.Location)).Union(references.Select(x => MetadataReference.CreateFromFile(x)));
 
