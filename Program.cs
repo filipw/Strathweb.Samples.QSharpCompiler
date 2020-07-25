@@ -18,34 +18,54 @@ namespace Strathweb.Samples.QSharpCompiler
     {
         static async Task Main(string[] args)
         {
-           var qvoid = typeof(QVoid); // Microsoft.Quantum.Simulation.Core
-           var option = typeof(System.CommandLine.Option); // System.CommandLine
-           var iEntryPoint = typeof(IEntryPoint<,>); // Microsoft.Quantum.EntryPointDriver
-           var message = typeof(Message); //Microsoft.Quantum.QSharp.Core
-
-            var references = new string[] 
+            var references = new string[]
             {
-                message.Assembly.Location
-            };
+                "Microsoft.Quantum.QSharp.Core",
+                "Microsoft.Quantum.Runtime.Core",
+                "Microsoft.Quantum.Simulators",
+                "Microsoft.Quantum.EntryPointDriver",
+                "System.CommandLine",
+                "System.Runtime",
+                "netstandard",
+                "System.Collections.Immutable"
+            }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
 
             var qsharpCode = @"
 namespace HelloQuantum {
 
     open Microsoft.Quantum.Canon;
+    open Microsoft.Quantum.Measurement;
     open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Convert;
 
     @EntryPoint()
     operation HelloQ() : Unit {
-        Message(""Hello quantum world!"");
+        let ones = GetRandomBit(100);
+        Message(""Ones: "" + IntAsString(ones));
+        Message(""Zeros: "" + IntAsString((100 - ones)));
+    }
+	
+    operation GetRandomBit(count : Int) : Int {
+ 
+        mutable resultsTotal = 0;
+ 
+        using (qubit = Qubit()) {       
+            for (idx in 0..count) {               
+                H(qubit);
+                let result = MResetZ(qubit);
+                set resultsTotal += result == One ? 1 | 0;
+            }
+            return resultsTotal;
+        }
     }
 }";
-            CompilationLoader.CompilationTaskEvent += (sender, args) => 
+            CompilationLoader.CompilationTaskEvent += (sender, args) =>
             {
                 Console.WriteLine($"{args.ParentTaskName} {args.TaskName}");
             };
 
-            var config = new CompilationLoader.Configuration 
-            { 
+            var config = new CompilationLoader.Configuration
+            {
                 IsExecutable = true,
                 RewriteSteps = new List<(string, string)>
                 {
@@ -53,17 +73,25 @@ namespace HelloQuantum {
                 }
             };
 
-            var compilationLoader = new CompilationLoader(loadFromDisk => 
-                new Dictionary<Uri, string> { { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode } }.ToImmutableDictionary(), references, options: config, logger: new ConsoleLogger()); 
-            var compilation = compilationLoader.CompilationOutput;
+            var compilationLoader = new CompilationLoader(loadFromDisk =>
+                new Dictionary<Uri, string> { { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode } }.ToImmutableDictionary(), references, options: config, logger: new ConsoleLogger());
+            
+            // if there are any errors, print diagostics and exit
+            if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error))
+            {
+                PrintDiagnostics(compilationLoader);
+                return;
+            }
 
-            Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, compilationLoader.LoadDiagnostics.Select(s => $"{s.Code} {s.Message}")));
+            // there were no errors, but print any other diagnostics
+            PrintDiagnostics(compilationLoader);
 
             var syntaxTrees = InMemoryEmitter.GeneratedFiles.Select(x => CSharpSyntaxTree.ParseText(x.Value));
+            var metadataReferences = references.Select(x => MetadataReference.CreateFromFile(x)).
+                Union(new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
-            var metadataReferences = AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic).Select(x => MetadataReference.CreateFromFile(x.Location)).Union(references.Select(x => MetadataReference.CreateFromFile(x)));
-
-            var csharpCompilation = CSharpCompilation.Create("hello-qsharp", syntaxTrees, metadataReferences);
+            var csharpCompilation = CSharpCompilation.Create("hello-qsharp", syntaxTrees)
+                .WithReferences(metadataReferences);
 
             using var peStream = new MemoryStream();
             var emitResult = csharpCompilation.Emit(peStream);
@@ -76,13 +104,22 @@ namespace HelloQuantum {
                 var entryPointTask = entryPoint.Invoke(null, new object[] { null }) as Task<int>;
                 await entryPointTask;
                 qsharpLoadContext.Unload();
-            } 
-            else 
+            }
+            else
             {
                 foreach (var diag in emitResult.Diagnostics)
                 {
                     Console.WriteLine($"{diag.Id} {diag.GetMessage()}");
                 }
+            }
+        }
+
+        private static void PrintDiagnostics(CompilationLoader compilationLoader)
+        {
+            var diagnostics = compilationLoader.LoadDiagnostics.Select(s => $"{s.Code} {s.Message}");
+            if (diagnostics.Any()) 
+            {
+                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics));
             }
         }
     }
