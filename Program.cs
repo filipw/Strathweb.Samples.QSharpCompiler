@@ -18,6 +18,8 @@ namespace Strathweb.Samples.QSharpCompiler
     {
         static async Task Main(string[] args)
         {
+            // necessary references to compile our Q# program
+            // and then the C# rewrite of it
             var references = new string[]
             {
                 "Microsoft.Quantum.QSharp.Core",
@@ -30,6 +32,7 @@ namespace Strathweb.Samples.QSharpCompiler
                 "System.Collections.Immutable"
             }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
 
+            // sample Q# code
             var qsharpCode = @"
 namespace HelloQuantum {
 
@@ -59,11 +62,14 @@ namespace HelloQuantum {
         }
     }
 }";
+
+            // events emitted by the Q# compiler
             CompilationLoader.CompilationTaskEvent += (sender, args) =>
             {
                 Console.WriteLine($"{args.ParentTaskName} {args.TaskName}");
             };
 
+            // to load our custom rewrite step, we need to point Q# compiler config at our current assembly
             var config = new CompilationLoader.Configuration
             {
                 IsExecutable = true,
@@ -73,6 +79,7 @@ namespace HelloQuantum {
                 }
             };
 
+            // compile Q# code
             var compilationLoader = new CompilationLoader(loadFromDisk =>
                 new Dictionary<Uri, string> { { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode } }.ToImmutableDictionary(), references, options: config, logger: new ConsoleLogger());
             
@@ -86,19 +93,24 @@ namespace HelloQuantum {
             // there were no errors, but print any other diagnostics
             PrintDiagnostics(compilationLoader);
 
+            // we captured the emitted C# syntax trees into a static variable in the rewrite step
             var syntaxTrees = InMemoryEmitter.GeneratedFiles.Select(x => CSharpSyntaxTree.ParseText(x.Value));
             var metadataReferences = references.Select(x => MetadataReference.CreateFromFile(x)).
                 Union(new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
+            // compile C# code
             var csharpCompilation = CSharpCompilation.Create("hello-qsharp", syntaxTrees)
                 .WithReferences(metadataReferences);
 
+            // emit C# code into an in memory assembly
             using var peStream = new MemoryStream();
             var emitResult = csharpCompilation.Emit(peStream);
             if (emitResult.Success)
             {
                 peStream.Position = 0;
                 var qsharpLoadContext = new QSharpLoadContext();
+
+                // run the assembly using reflection
                 var qsharpAssembly = qsharpLoadContext.LoadFromStream(peStream);
                 var entryPoint = qsharpAssembly.GetTypes().First(x => x.Name == "__QsEntryPoint__").GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static);
                 var entryPointTask = entryPoint.Invoke(null, new object[] { null }) as Task<int>;
