@@ -15,7 +15,6 @@ namespace Strathweb.Samples.QSharpCompiler
     {
         static async Task Main(string[] args)
         {
-            
             // sample Q# code
             var qsharpCode = @"
 namespace HelloQuantum {
@@ -54,20 +53,6 @@ namespace HelloQuantum {
                 "Microsoft.Quantum.Runtime.Core",
             }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
 
-            // necessary references to compile C# simulation of the Q# compilation
-            var csharpReferences = new string[]
-            {
-                "Microsoft.Quantum.QSharp.Core",
-                "Microsoft.Quantum.Runtime.Core",
-                "Microsoft.Quantum.Simulators",
-                "Microsoft.Quantum.EntryPointDriver",
-                "System.CommandLine",
-                "System.Runtime",
-                "netstandard",
-                "System.Collections.Immutable",
-                typeof(object).Assembly.FullName
-            }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
-
             // events emitted by the Q# compiler
             CompilationLoader.CompilationTaskEvent += (sender, args) =>
             {
@@ -80,23 +65,42 @@ namespace HelloQuantum {
                 IsExecutable = true,
                 RewriteSteps = new List<(string, string)>
                 {
-                    ( Assembly.GetExecutingAssembly().Location, null)
-                }
+                    ( Assembly.GetExecutingAssembly().Location, null),
+                },
             };
 
             // compile Q# code
-            var compilationLoader = new CompilationLoader(loadFromDisk =>
+            var compilationLoader = new CompilationLoader(
+                loadFromDisk =>
                 new Dictionary<Uri, string> { { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode } }.ToImmutableDictionary(), qsharpReferences, options: config, logger: new ConsoleLogger());
-            
-            // if there are any errors, print diagostics and exit
+
+            // print any diagnostics
+            var diagnostics = compilationLoader.LoadDiagnostics.Select(s => $"{s.Code} {s.Message}");
+            if (diagnostics.Any()) 
+            {
+                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics));
+            }
+
+            // if there are any errors, exit
             if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error))
             {
-                PrintDiagnostics(compilationLoader);
                 return;
             }
 
-            // there were no errors, but print any other diagnostics
-            PrintDiagnostics(compilationLoader);
+            // necessary references to compile C# simulation of the Q# compilation
+            var csharpReferences = new string[]
+            {
+                "Microsoft.Quantum.QSharp.Core",
+                "Microsoft.Quantum.Runtime.Core",
+                "Microsoft.Quantum.Simulators",
+                "Microsoft.Quantum.EntryPointDriver",
+                "System.CommandLine",
+                "System.Runtime",
+                "netstandard",
+                "System.Collections.Immutable",
+                typeof(object).Assembly.FullName,
+            }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
+
 
             // we captured the emitted C# syntax trees into a static variable in the rewrite step
             var syntaxTrees = InMemoryEmitter.GeneratedFiles.Select(x => CSharpSyntaxTree.ParseText(x.Value));
@@ -129,15 +133,6 @@ namespace HelloQuantum {
                 {
                     Console.WriteLine($"{diag.Id} {diag.GetMessage()}");
                 }
-            }
-        }
-
-        private static void PrintDiagnostics(CompilationLoader compilationLoader)
-        {
-            var diagnostics = compilationLoader.LoadDiagnostics.Select(s => $"{s.Code} {s.Message}");
-            if (diagnostics.Any()) 
-            {
-                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics));
             }
         }
     }

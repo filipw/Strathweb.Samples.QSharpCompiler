@@ -13,7 +13,6 @@ namespace Strathweb.Samples.QSharpCompiler
         protected internal virtual string Format(Diagnostic msg) =>
             this.applyFormatting(msg);
 
-        /// <inheritdoc/>
         protected sealed override void Print(Diagnostic msg) =>
             PrintToConsole(msg.Severity, this.Format(msg));
 
@@ -31,22 +30,8 @@ namespace Strathweb.Samples.QSharpCompiler
             {
                 throw new ArgumentNullException(nameof(message));
             }
-            var (stream, color) =
-                severity == DiagnosticSeverity.Error ? (Console.Error, ConsoleColor.Red) :
-                severity == DiagnosticSeverity.Warning ? (Console.Error, ConsoleColor.Yellow) :
-                (Console.Out, Console.ForegroundColor);
 
-            var consoleColor = Console.ForegroundColor;
-            Console.ForegroundColor = color;
-            try
-            {
-                var output = message;
-                stream.WriteLine(output);
-            }
-            finally
-            {
-                Console.ForegroundColor = consoleColor;
-            }
+            Console.WriteLine(severity.ToString() + " " + message);
         }
     }
 }

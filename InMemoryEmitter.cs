@@ -12,7 +12,7 @@ namespace Strathweb.Samples.QSharpCompiler
 {
     class InMemoryEmitter : IRewriteStep
     {
-        public static Dictionary<string, string> GeneratedFiles = new Dictionary<string, string>();
+        public static Dictionary<string, string> GeneratedFiles { get; } = new Dictionary<string, string>();
 
         private readonly Dictionary<string, string> _assemblyConstants = new Dictionary<string, string>();
         private readonly List<IRewriteStep.Diagnostic> _diagnostics = new List<IRewriteStep.Diagnostic>();
@@ -51,7 +51,7 @@ namespace Strathweb.Samples.QSharpCompiler
             {
                 var callable = context.allCallables.First(c => c.Key == compilation.EntryPoints.First()).Value;
                 var content = EntryPoint.generate(context, callable);
-                NonNullable<string> entryPointName =  NonNullable<string>.New(callable.SourceFile.Value + ".EntryPoint");
+                NonNullable<string> entryPointName = NonNullable<string>.New(callable.SourceFile.Value + ".EntryPoint");
                 GeneratedFiles.Add(entryPointName.Value, content);
             }
 
