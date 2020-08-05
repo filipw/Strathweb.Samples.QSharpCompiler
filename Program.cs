@@ -75,8 +75,8 @@ namespace HelloQuantum {
                 new Dictionary<Uri, string> { { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode } }.ToImmutableDictionary(), qsharpReferences, options: config, logger: new ConsoleLogger());
 
             // print any diagnostics
-            var diagnostics = compilationLoader.LoadDiagnostics.Select(s => $"{s.Code} {s.Message}");
-            if (diagnostics.Any()) 
+            var diagnostics = compilationLoader.LoadDiagnostics.Select(d => $"{d.Severity} {d.Code} {d.Message}");
+            if (diagnostics.Any())
             {
                 Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics));
             }
@@ -110,30 +110,33 @@ namespace HelloQuantum {
             var csharpCompilation = CSharpCompilation.Create("hello-qsharp", syntaxTrees)
                 .WithReferences(csharpReferences.Select(x => MetadataReference.CreateFromFile(x)));
 
+            // print any diagnostics
+            var csharpDiagnostics = csharpCompilation.GetDiagnostics().Select(d => $"{d.Severity} {d.Id} {d.GetMessage()}");
+            if (csharpDiagnostics.Any())
+            {
+                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics));
+            }
+
+            // if there are any errors, exit
+            if (csharpCompilation.GetDiagnostics().Any(d => d.Severity == DiagnosticSeverity.Error))
+            {
+                return;
+            }
+
             // emit C# code into an in memory assembly
             using var peStream = new MemoryStream();
             var emitResult = csharpCompilation.Emit(peStream);
-            if (emitResult.Success)
-            {
-                peStream.Position = 0;
-                var qsharpLoadContext = new QSharpLoadContext();
+            peStream.Position = 0;
+            var qsharpLoadContext = new QSharpLoadContext();
 
-                // run the assembly using reflection
-                var qsharpAssembly = qsharpLoadContext.LoadFromStream(peStream);
+            // run the assembly using reflection
+            var qsharpAssembly = qsharpLoadContext.LoadFromStream(peStream);
 
-                // the entry point has a special name "__QsEntryPoint__"
-                var entryPoint = qsharpAssembly.GetTypes().First(x => x.Name == "__QsEntryPoint__").GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static);
-                var entryPointTask = entryPoint.Invoke(null, new object[] { null }) as Task<int>;
-                await entryPointTask;
-                qsharpLoadContext.Unload();
-            }
-            else
-            {
-                foreach (var diag in emitResult.Diagnostics)
-                {
-                    Console.WriteLine($"{diag.Id} {diag.GetMessage()}");
-                }
-            }
+            // the entry point has a special name "__QsEntryPoint__"
+            var entryPoint = qsharpAssembly.GetTypes().First(x => x.Name == "__QsEntryPoint__").GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static);
+            var entryPointTask = entryPoint.Invoke(null, new object[] { null }) as Task<int>;
+            await entryPointTask;
+            qsharpLoadContext.Unload();
         }
     }
 }
