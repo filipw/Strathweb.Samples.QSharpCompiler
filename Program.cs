@@ -56,7 +56,7 @@ namespace HelloQuantum {
             // events emitted by the Q# compiler
             CompilationLoader.CompilationTaskEvent += (sender, args) =>
             {
-                Console.WriteLine($"{args.ParentTaskName} {args.TaskName}");
+                Console.WriteLine($"{args.ParentTaskName} {args.TaskName} - {args.Type}");
             };
 
             // to load our custom rewrite step, we need to point Q# compiler config at our current assembly
@@ -111,10 +111,10 @@ namespace HelloQuantum {
                 .WithReferences(csharpReferences.Select(x => MetadataReference.CreateFromFile(x)));
 
             // print any diagnostics
-            var csharpDiagnostics = csharpCompilation.GetDiagnostics().Select(d => $"{d.Severity} {d.Id} {d.GetMessage()}");
+            var csharpDiagnostics = csharpCompilation.GetDiagnostics().Where(d => d.Severity != DiagnosticSeverity.Hidden).Select(d => $"{d.Severity} {d.Id} {d.GetMessage()}");
             if (csharpDiagnostics.Any())
             {
-                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics));
+                Console.WriteLine("C# Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, csharpDiagnostics));
             }
 
             // if there are any errors, exit
