@@ -75,16 +75,15 @@ namespace HelloQuantum {
                 new Dictionary<Uri, string> { { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode } }.ToImmutableDictionary(), qsharpReferences, options: config, logger: new ConsoleLogger());
 
             // print any diagnostics
-            var diagnostics = compilationLoader.LoadDiagnostics.Select(d => $"{d.Severity} {d.Code} {d.Message}");
-            if (diagnostics.Any())
+            if (compilationLoader.LoadDiagnostics.Any())
             {
-                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics));
-            }
+                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics.Select(d => $"{d.Severity} {d.Code} {d.Message}")));
 
-            // if there are any errors, exit
-            if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error))
-            {
-                return;
+                // if there are any errors, exit
+                if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error))
+                {
+                    return;
+                }
             }
 
             // necessary references to compile C# simulation of the Q# compilation
@@ -111,16 +110,16 @@ namespace HelloQuantum {
                 .WithReferences(csharpReferences.Select(x => MetadataReference.CreateFromFile(x)));
 
             // print any diagnostics
-            var csharpDiagnostics = csharpCompilation.GetDiagnostics().Where(d => d.Severity != DiagnosticSeverity.Hidden).Select(d => $"{d.Severity} {d.Id} {d.GetMessage()}");
+            var csharpDiagnostics = csharpCompilation.GetDiagnostics().Where(d => d.Severity != DiagnosticSeverity.Hidden);
             if (csharpDiagnostics.Any())
             {
-                Console.WriteLine("C# Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, csharpDiagnostics));
-            }
+                Console.WriteLine("C# Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, csharpDiagnostics.Select(d => $"{d.Severity} {d.Id} {d.GetMessage()}")));
 
-            // if there are any errors, exit
-            if (csharpCompilation.GetDiagnostics().Any(d => d.Severity == DiagnosticSeverity.Error))
-            {
-                return;
+                // if there are any errors, exit
+                if (csharpDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
+                {
+                    return;
+                }
             }
 
             // emit C# code into an in memory assembly
