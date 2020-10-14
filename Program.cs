@@ -77,7 +77,7 @@ namespace HelloQuantum {
             // print any diagnostics
             if (compilationLoader.LoadDiagnostics.Any())
             {
-                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, diagnostics.Select(d => $"{d.Severity} {d.Code} {d.Message}")));
+                Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, compilationLoader.LoadDiagnostics.Select(d => $"{d.Severity} {d.Code} {d.Message}")));
 
                 // if there are any errors, exit
                 if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error))
