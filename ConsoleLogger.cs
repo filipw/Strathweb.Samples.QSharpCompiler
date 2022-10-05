@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using Microsoft.Quantum.QsCompiler.Diagnostics;
-using Diagnostic = Microsoft.VisualStudio.LanguageServer.Protocol.Diagnostic;
-using DiagnosticSeverity = Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Strathweb.Samples.QSharpCompiler
 {
@@ -24,14 +21,26 @@ namespace Strathweb.Samples.QSharpCompiler
         : base(verbosity, noWarn, lineNrOffset) =>
             this.applyFormatting = format ?? Formatting.HumanReadableFormat;
 
-        private static void PrintToConsole(DiagnosticSeverity severity, string message)
+        private static void PrintToConsole(DiagnosticSeverity? severity, string message)
         {
-            if (message == null)
+            var (stream, color) = severity switch
             {
-                throw new ArgumentNullException(nameof(message));
-            }
+                DiagnosticSeverity.Error => (Console.Error, ConsoleColor.Red),
+                DiagnosticSeverity.Warning => (Console.Error, ConsoleColor.Yellow),
+                _ => (Console.Out, Console.ForegroundColor),
+            };
 
-            Console.WriteLine(severity.ToString() + " " + message);
+            var consoleColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            try
+            {
+                var output = message;
+                stream.WriteLine(output);
+            }
+            finally
+            {
+                Console.ForegroundColor = consoleColor;
+            }
         }
     }
 }

@@ -41,18 +41,23 @@ namespace Strathweb.Samples.QSharpCompiler
             var context = CodegenContext.Create(compilation, _assemblyConstants);
             var sources = GetSourceFiles.Apply(compilation.Namespaces);
 
-            foreach (var source in sources.Where(s => !s.Value.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)))
+            foreach (var source in sources.Where(s => !s.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)))
             {
                 var content = SimulationCode.generate(source, context);
-                GeneratedFiles.Add(source.Value, content);
+                GeneratedFiles.Add(source, content);
             }
 
             if (!compilation.EntryPoints.IsEmpty)
             {
-                var callable = context.allCallables.First(c => c.Key == compilation.EntryPoints.First()).Value;
-                var content = EntryPoint.generate(context, callable);
-                NonNullable<string> entryPointName = NonNullable<string>.New(callable.SourceFile.Value + ".EntryPoint");
-                GeneratedFiles.Add(entryPointName.Value, content);
+                var callable = context.allCallables.First(c => c.Key.Name == compilation.EntryPoints.First().Name).Value;
+                
+                var mainContent = EntryPoint.generateMainSource(context, new[] { callable });
+                var mainName = callable.SourceFile + ".g.Main.cs";
+                GeneratedFiles.Add(mainName, mainContent);
+
+                var content = EntryPoint.generateSource(context, new[] { callable });
+                var entryPointName = callable.SourceFile + ".g.EntryPoint.cs";
+                GeneratedFiles.Add(entryPointName, content);
             }
 
             transformed = compilation;
