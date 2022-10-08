@@ -1,21 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.CsharpGeneration;
 using Microsoft.Quantum.QsCompiler.SyntaxTree;
 using Microsoft.Quantum.QsCompiler.Transformations.BasicTransformations;
-using Microsoft.Quantum.QsCompiler.DataTypes;
 
 namespace Strathweb.Samples.QSharpCompiler
 {
     class InMemoryEmitter : IRewriteStep
     {
-        public static Dictionary<string, string> GeneratedFiles { get; } = new Dictionary<string, string>();
+        public static Dictionary<string, string> GeneratedFiles { get; } = new();
 
-        private readonly Dictionary<string, string> _assemblyConstants = new Dictionary<string, string>();
-        private readonly List<IRewriteStep.Diagnostic> _diagnostics = new List<IRewriteStep.Diagnostic>();
+        private readonly Dictionary<string, string> _assemblyConstants = new();
+        private readonly List<IRewriteStep.Diagnostic> _diagnostics = new();
 
         public string Name => "InMemoryCsharpGeneration";
 

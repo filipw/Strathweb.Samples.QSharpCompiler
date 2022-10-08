@@ -127,7 +127,14 @@ var qsharpLoadContext = new QSharpLoadContext();
 var qsharpAssembly = qsharpLoadContext.LoadFromStream(peStream);
 
 // the entry point has a special name "__QsEntryPoint__"
-var entryPoint = qsharpAssembly.GetTypes().First(x => x.Name == "__QsEntryPoint__").GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static);
+var entryPoint = qsharpAssembly.GetTypes().FirstOrDefault(x => x.Name == "__QsEntryPoint__").GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static);
+
+if (entryPoint == null)
+{
+    Console.WriteLine("ERROR: Could not find entrypoint.");
+    return;
+}
+
 var entryPointTask = entryPoint.Invoke(null, new object[] { null }) as Task<int>;
 await entryPointTask;
 qsharpLoadContext.Unload();

@@ -8,7 +8,7 @@ namespace Strathweb.Samples.QSharpCompiler
         private readonly Func<Diagnostic, string> applyFormatting;
 
         protected internal virtual string Format(Diagnostic msg) =>
-            this.applyFormatting(msg);
+            applyFormatting(msg);
 
         protected sealed override void Print(Diagnostic msg) =>
             PrintToConsole(msg.Severity, this.Format(msg));
