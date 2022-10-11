@@ -39,10 +39,10 @@ namespace HelloQuantum {
 // necessary references to compile our Q# program
 var qsharpReferences = new string[]
 {
-                "Microsoft.Quantum.QSharp.Foundation",
-                "Microsoft.Quantum.QSharp.Core",
-                "Microsoft.Quantum.Runtime.Core",
-                "Microsoft.Quantum.Standard",
+    "Microsoft.Quantum.QSharp.Foundation",
+    "Microsoft.Quantum.QSharp.Core",
+    "Microsoft.Quantum.Runtime.Core",
+    "Microsoft.Quantum.Standard",
 }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
 
 // events emitted by the Q# compiler
@@ -56,9 +56,9 @@ var config = new CompilationLoader.Configuration
 {
     IsExecutable = true,
     RewriteStepAssemblies = new List<(string, string)>
-                {
-                    ( Assembly.GetExecutingAssembly().Location, null),
-                }
+    {
+        ( Assembly.GetExecutingAssembly().Location, null),
+    }
 };
 
 // compile Q# code
@@ -83,17 +83,17 @@ if (compilationLoader.LoadDiagnostics.Any())
 // necessary references to compile C# simulation of the Q# compilation
 var csharpReferences = new string[]
 {
-                "Microsoft.Quantum.QSharp.Foundation",
-                "Microsoft.Quantum.QSharp.Core",
-                "Microsoft.Quantum.Runtime.Core",
-                "Microsoft.Quantum.Standard",
-                "Microsoft.Quantum.Simulators",
-                "Microsoft.Quantum.EntryPointDriver",
-                "System.CommandLine",
-                "System.Runtime",
-                "netstandard",
-                "System.Collections.Immutable",
-                typeof(object).Assembly.FullName,
+    "Microsoft.Quantum.QSharp.Foundation",
+    "Microsoft.Quantum.QSharp.Core",
+    "Microsoft.Quantum.Runtime.Core",
+    "Microsoft.Quantum.Standard",
+    "Microsoft.Quantum.Simulators",
+    "Microsoft.Quantum.EntryPointDriver",
+    "System.CommandLine",
+    "System.Runtime",
+    "netstandard",
+    "System.Collections.Immutable",
+    typeof(object).Assembly.FullName,
 }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
 
 // we captured the emitted C# syntax trees into a static variable in the rewrite step
