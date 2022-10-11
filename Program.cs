@@ -55,17 +55,17 @@ PerformanceTracking.CompilationTaskEvent += (eventType, parentTaskName, taskName
 var config = new CompilationLoader.Configuration
 {
     IsExecutable = true,
-    RewriteSteps = new List<(string, string)>
+    RewriteStepAssemblies = new List<(string, string)>
                 {
                     ( Assembly.GetExecutingAssembly().Location, null),
-                },
+                }
 };
 
 // compile Q# code
 var compilationLoader = new CompilationLoader(
     loadFromDisk =>
-        new Dictionary<Uri, string> { 
-            { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode  } 
+        new Dictionary<Uri, string> {
+            { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode  }
         }.ToImmutableDictionary(), qsharpReferences, options: config, logger: new ConsoleLogger());
 
 // print any diagnostics
