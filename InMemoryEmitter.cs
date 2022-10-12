@@ -7,7 +7,7 @@ namespace Strathweb.Samples.QSharpCompiler
 {
     class InMemoryEmitter : IRewriteStep
     {
-        public static Dictionary<string, string> GeneratedFiles { get; } = new();
+        public Dictionary<string, string> GeneratedFiles { get; } = new();
 
         private readonly Dictionary<string, string> _assemblyConstants = new();
         private readonly List<IRewriteStep.Diagnostic> _diagnostics = new();

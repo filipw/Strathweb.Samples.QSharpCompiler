@@ -51,14 +51,16 @@ PerformanceTracking.CompilationTaskEvent += (eventType, parentTaskName, taskName
     Console.WriteLine($"{parentTaskName} {taskName} - {eventType}");
 };
 
-// to load our custom rewrite step, we need to point Q# compiler config at our current assembly
+var inMemoryEmitter = new InMemoryEmitter();
+
+// load our custom rewrite step
 var config = new CompilationLoader.Configuration
 {
     IsExecutable = true,
-    RewriteStepAssemblies = new List<(string, string)>
+    RewriteStepInstances = new List<(IRewriteStep, string)>
     {
-        ( Assembly.GetExecutingAssembly().Location, null),
-    }
+        ( inMemoryEmitter, ""),
+    },
 };
 
 // compile Q# code
@@ -97,7 +99,7 @@ var csharpReferences = new string[]
 }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
 
 // we captured the emitted C# syntax trees into a static variable in the rewrite step
-var syntaxTrees = InMemoryEmitter.GeneratedFiles.Select(x => CSharpSyntaxTree.ParseText(x.Value));
+var syntaxTrees = inMemoryEmitter.GeneratedFiles.Select(x => CSharpSyntaxTree.ParseText(x.Value));
 
 // compile C# code
 // make sure to pass in the C# references as Roslyn's metadata references
