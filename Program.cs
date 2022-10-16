@@ -98,7 +98,7 @@ var csharpReferences = new string[]
     typeof(object).Assembly.FullName,
 }.Select(x => Assembly.Load(new AssemblyName(x))).Select(a => a.Location);
 
-// we captured the emitted C# syntax trees into a static variable in the rewrite step
+// we captured the emitted C# syntax trees in the rewrite step
 var syntaxTrees = inMemoryEmitter.GeneratedFiles.Select(x => CSharpSyntaxTree.ParseText(x.Value));
 
 // compile C# code
