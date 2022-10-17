@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.Diagnostics;
 using Strathweb.Samples.QSharpCompiler;
+// using LspDiagnostic = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 // sample Q# code
 var qsharpCode = @"
@@ -35,6 +36,8 @@ namespace HelloQuantum {
             return resultsTotal;
     }
 }";
+
+var logger = new ConsoleLogger();
 
 // necessary references to compile our Q# program
 var qsharpReferences = new string[]
@@ -68,18 +71,18 @@ var compilationLoader = new CompilationLoader(
     loadFromDisk =>
         new Dictionary<Uri, string> {
             { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode  }
-        }.ToImmutableDictionary(), qsharpReferences, options: config, logger: new ConsoleLogger());
+        }.ToImmutableDictionary(), qsharpReferences, options: config, logger: logger);
 
 // print any diagnostics
-if (compilationLoader.LoadDiagnostics.Any())
+foreach (var diagnostic in compilationLoader.LoadDiagnostics)
 {
-    Console.WriteLine("Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, compilationLoader.LoadDiagnostics.Select(d => $"{d.Severity} {d.Code} {d.Message}")));
+    ConsoleLogger.PrintToConsole(diagnostic.Severity, diagnostic.Message);
+}
 
-    // if there are any errors, exit
-    if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error))
-    {
-        return;
-    }
+// if there are any errors, exit
+if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error))
+{
+    return;
 }
 
 // necessary references to compile C# simulation of the Q# compilation
@@ -108,15 +111,15 @@ var csharpCompilation = CSharpCompilation.Create("hello-qsharp", syntaxTrees)
 
 // print any diagnostics
 var csharpDiagnostics = csharpCompilation.GetDiagnostics().Where(d => d.Severity != DiagnosticSeverity.Hidden);
-if (csharpDiagnostics.Any())
+foreach (var diagnostic in csharpDiagnostics)
 {
-    Console.WriteLine("C# Diagnostics:" + Environment.NewLine + string.Join(Environment.NewLine, csharpDiagnostics.Select(d => $"{d.Severity} {d.Id} {d.GetMessage()}")));
+    ConsoleLogger.PrintToConsole(diagnostic.Severity, diagnostic.GetMessage());
+}
 
-    // if there are any errors, exit
-    if (csharpDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
-    {
-        return;
-    }
+// if there are any errors, exit
+if (csharpDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
+{
+    return;
 }
 
 // emit C# code into an in memory assembly

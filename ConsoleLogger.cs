@@ -21,12 +21,34 @@ namespace Strathweb.Samples.QSharpCompiler
         : base(verbosity, noWarn, lineNrOffset) =>
             this.applyFormatting = format ?? Formatting.HumanReadableFormat;
 
-        private static void PrintToConsole(DiagnosticSeverity? severity, string message)
+        public static void PrintToConsole(DiagnosticSeverity? severity, string message)
         {
             var (stream, color) = severity switch
             {
                 DiagnosticSeverity.Error => (Console.Error, ConsoleColor.Red),
                 DiagnosticSeverity.Warning => (Console.Error, ConsoleColor.Yellow),
+                _ => (Console.Out, Console.ForegroundColor),
+            };
+
+            var consoleColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            try
+            {
+                var output = message;
+                stream.WriteLine(output);
+            }
+            finally
+            {
+                Console.ForegroundColor = consoleColor;
+            }
+        }
+
+        public static void PrintToConsole(Microsoft.CodeAnalysis.DiagnosticSeverity? severity, string message)
+        {
+            var (stream, color) = severity switch
+            {
+                Microsoft.CodeAnalysis.DiagnosticSeverity.Error => (Console.Error, ConsoleColor.Red),
+                Microsoft.CodeAnalysis.DiagnosticSeverity.Warning => (Console.Error, ConsoleColor.Yellow),
                 _ => (Console.Out, Console.ForegroundColor),
             };
 
