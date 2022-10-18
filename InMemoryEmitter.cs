@@ -10,6 +10,7 @@ namespace Strathweb.Samples.QSharpCompiler
         public Dictionary<string, string> GeneratedFiles { get; } = new();
 
         private readonly Dictionary<string, string> _assemblyConstants = new();
+        
         private readonly List<IRewriteStep.Diagnostic> _diagnostics = new();
 
         public string Name => "InMemoryCsharpGeneration";
@@ -26,10 +27,7 @@ namespace Strathweb.Samples.QSharpCompiler
 
         public bool ImplementsPostconditionVerification => false;
 
-        public bool PreconditionVerification(QsCompilation compilation)
-        {
-            throw new NotImplementedException();
-        }
+        public bool PreconditionVerification(QsCompilation compilation) => throw new NotImplementedException();
 
         public bool Transformation(QsCompilation compilation, out QsCompilation transformed)
         {
@@ -59,9 +57,6 @@ namespace Strathweb.Samples.QSharpCompiler
             return true;
         }
 
-        public bool PostconditionVerification(QsCompilation compilation)
-        {
-            throw new NotImplementedException();
-        }
+        public bool PostconditionVerification(QsCompilation compilation) => throw new NotImplementedException();
     }
 }
