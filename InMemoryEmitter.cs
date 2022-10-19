@@ -10,7 +10,7 @@ namespace Strathweb.Samples.QSharpCompiler
         public Dictionary<string, string> GeneratedFiles { get; } = new();
 
         private readonly Dictionary<string, string> _assemblyConstants = new();
-        
+
         private readonly List<IRewriteStep.Diagnostic> _diagnostics = new();
 
         public string Name => "InMemoryCsharpGeneration";
@@ -45,11 +45,11 @@ namespace Strathweb.Samples.QSharpCompiler
                 var callable = context.allCallables.First(c => c.Key.Name == compilation.EntryPoints.First().Name).Value;
                 
                 var mainContent = EntryPoint.generateMainSource(context, new[] { callable });
-                var mainName = callable.SourceFile + ".g.Main.cs";
+                var mainName = callable.Source.CodeFile + ".g.Main.cs";
                 GeneratedFiles.Add(mainName, mainContent);
 
                 var content = EntryPoint.generateSource(context, new[] { callable });
-                var entryPointName = callable.SourceFile + ".g.EntryPoint.cs";
+                var entryPointName = callable.Source.CodeFile + ".g.EntryPoint.cs";
                 GeneratedFiles.Add(entryPointName, content);
             }
 

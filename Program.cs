@@ -136,7 +136,7 @@ var entryPoint = qsharpAssembly.GetTypes().FirstOrDefault(x => x.Name == "__QsEn
 
 if (entryPoint == null)
 {
-    Console.WriteLine("ERROR: Could not find entrypoint.");
+    ConsoleLogger.PrintToConsole(DiagnosticSeverity.Error, "Could not find entrypoint.");
     return;
 }
 
