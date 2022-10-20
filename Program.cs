@@ -51,7 +51,7 @@ var qsharpReferences = new string[]
 // events emitted by the Q# compiler
 PerformanceTracking.CompilationTaskEvent += (eventType, parentTaskName, taskName) =>
 {
-    Console.WriteLine($"{parentTaskName} {taskName} - {eventType}");
+    Console.Error.WriteLine($"Diagnostic: {parentTaskName} {taskName} - {eventType}");
 };
 
 var inMemoryEmitter = new InMemoryEmitter();
