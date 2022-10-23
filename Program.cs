@@ -5,39 +5,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Quantum.QsCompiler;
 using Microsoft.Quantum.QsCompiler.Diagnostics;
 using Strathweb.Samples.QSharpCompiler;
-// using LspDiagnostic = Microsoft.VisualStudio.LanguageServer.Protocol;
+using LspDiagnostic = Microsoft.VisualStudio.LanguageServer.Protocol;
 
-// sample Q# code
-var qsharpCode = @"
-namespace HelloQuantum {
-
-    open Microsoft.Quantum.Canon;
-    open Microsoft.Quantum.Measurement;
-    open Microsoft.Quantum.Intrinsic;
-    open Microsoft.Quantum.Convert;
-
-    @EntryPoint()
-    operation HelloQ() : Unit {
-        let ones = GetRandomBit(100);
-        Message(""Ones: "" + IntAsString(ones));
-        Message(""Zeros: "" + IntAsString((100 - ones)));
-    }
-	
-    operation GetRandomBit(count : Int) : Int {
- 
-        mutable resultsTotal = 0;
- 
-        use qubit = Qubit();       
-            for idx in 0..count {               
-                H(qubit);
-                let result = MResetZ(qubit);
-                set resultsTotal += result == One ? 1 | 0;
-            }
-            return resultsTotal;
-    }
-}";
-
-var logger = new ConsoleLogger();
+// read Q# code
+var qsharpCode = File.ReadAllText("Code.qs");
 
 // necessary references to compile our Q# program
 var qsharpReferences = new string[]
@@ -71,7 +42,7 @@ var compilationLoader = new CompilationLoader(
     loadFromDisk =>
         new Dictionary<Uri, string> {
             { new Uri(Path.GetFullPath("__CODE_SNIPPET__.qs")), qsharpCode  }
-        }.ToImmutableDictionary(), qsharpReferences, options: config, logger: logger);
+        }.ToImmutableDictionary(), qsharpReferences, options: config, logger: new ConsoleLogger());
 
 // print any diagnostics
 foreach (var diagnostic in compilationLoader.LoadDiagnostics)
@@ -80,7 +51,7 @@ foreach (var diagnostic in compilationLoader.LoadDiagnostics)
 }
 
 // if there are any errors, exit
-if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == Microsoft.VisualStudio.LanguageServer.Protocol.DiagnosticSeverity.Error))
+if (compilationLoader.LoadDiagnostics.Any(d => d.Severity == LspDiagnostic.DiagnosticSeverity.Error))
 {
     return;
 }
